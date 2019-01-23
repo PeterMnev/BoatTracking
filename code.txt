@@ -1,0 +1,61 @@
+import cv2
+import numpy as np
+import time
+
+
+start_time = time.time()
+
+
+#GIVEN: Boat center, bounding box, webcam video feed
+
+#GOAL: Compute next center. Increase bounding box with time.
+
+#Preparation of image
+im = cv2.imread('BoatPic.jpg')
+imgr = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+imgray = cv2.medianBlur(imgr,15)
+
+#Regular detection
+ret,thresh = cv2.threshold(imgray, 127,255, 0)
+im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+
+cv2.drawContours(im, contours, -1, (0,255,0),3)
+
+print("--- %s seconds ---" % (time.time() - start_time))
+
+cv2.imwrite("BoatSmoothed.jpeg", imgray)
+cv2.imwrite("BoatContoursAlt.jpg",im)
+
+
+
+
+cap = cv2.VideoCapture('vid.mp4')
+
+time.sleep(2)
+
+
+
+#Adaptive Thresholding
+v = np.median(imgray)
+sigma = .33
+lower = int(max(0,(1.0-sigma)*v))
+upper = int (min(255, (1.0-sigma)*v))
+
+#Canny detection
+edged = cv2.Canny(imgray, lower, upper)
+
+
+while(True):
+    ret, frame = cap.read()
+    greyFrame = cv2.cvtColor(frame,cv2.COLOR_BGR2GRAY)
+    greyFrame = cv2.medianBlur(greyFrame,15)
+    ret,thresh = cv2.threshold(greyFrame, 127,255, 0)
+    im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    cv2.drawContours(frame, contours, -1, (0,255,0),3)
+    cv2.imshow('frame',frame)
+    
+    if cv2.waitKey(10) & 0xFF == ord('q'):
+            break
+cap.release()
+cv2.destroyAllWindows()
