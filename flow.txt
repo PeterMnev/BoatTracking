@@ -1,0 +1,14 @@
+Flow
+
+1: Initiate main class (Thread 0)
+
+Contains variables: video_capture, various telemetry variables, drone
+
+- Thread 1: Neural net wrapper - every 12 seconds uses video_capture object to determine boat location
+- Thread 2: Uses video_capture object to perform interpolation of where the boat might be, continuously
+
+
+Thread 0: Continuously updates telemetry data and computes boat position based on image proc (in future, will use moving averages as well), issues commands to drone 
+
+
+Considerations: if laggy, put the self state update in its own separate thread.

@@ -1,10 +1,16 @@
 import cv2
 import numpy as np
 import time
+import sys
+sys.path.insert(0, '/home/nvidia/Documents/darknet')
+import darknet
+
+
+
 
 start_time = time.time()
 
-frame = im = cv2.imread('HTASub.png')
+frame = im = cv2.imread('testCases/BoatPic.jpg')
 #subFrame = frame[max(0,center[0]-270):min(720,center[0]+270), max(0,center[1]-480):min(1280,center[1]+480)]
 #subFrame = frame[max(0,center[0]-270):min(720,center[0]+270), max(0,center[1]-480):min(1280,center[1]+480)]
 kernel = np.ones((5,5),np.uint8)
@@ -58,5 +64,16 @@ except:
     print ("null")
 
 cv2.imwrite("boatProcked.jpeg", frame)
+
+
+im, image = darknet.array_to_image(frame)
+darknet.rgbgr_image(im)
+
+net = darknet.load_net("/home/nvidia/Documents/darknet/cfg/yolov3.cfg", "/home/nvidia/Documents/darknet/yolov3.weights", 0)
+meta = darknet.load_meta("/home/nvidia/Documents/darknet/cfg/coco.data")
+r = darknet.detect(net, meta, im)
+print r
+
+
 
 

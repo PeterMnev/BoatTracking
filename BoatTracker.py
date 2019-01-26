@@ -5,28 +5,33 @@ import math
 import signal
 import cv2
 import numpy as np
+from threading import Thread
+from Queue import Queue
 
-
-from dronekit import connect, VehicleMode
+#from dronekit import connect, VehicleMode
 from time import sleep
 from geographiclib.geodesic import Geodesic
 
 import argparse  
-parser = argparse.ArgumentParser(description='Print out vehicle state information. Connects to SITL on local PC by default.')
-parser.add_argument('--connect', 
-                   help="vehicle connection target string. If not specified, SITL automatically started and used.")
-args = parser.parse_args()
+#should probably rename neural
+import neural
+import sys
+sys.path.insert(0, '/home/nvidia/Documents/darknet')
+import darknet
 
-connection_string = args.connect
-vehicle = connect(connection_string, wait_ready=True)
 
-#TODO (AKA things that were omitted because they would be annoying in testing)
+#parser = argparse.ArgumentParser(description='Print out vehicle state information. Connects to SITL on local PC by default.')
+#parser.add_argument('--connect', 
+#help="vehicle connection target string. If not specified, SITL automatically started and used.")
+#args = parser.parse_args()
+#connection_string = args.connect
 
-# 1) Call the command that starts the recognition from a script / bash script
-# 2) Organize file locations. seriously.
-# 3) ROS Messages
-# 4) Figure out what I adjusted in the darknet setup (oops)
-# 5) Implement fix for the case when an object is assigned two types (causing crashes)
+
+
+
+#TODO
+# !!!!!!! Figure out what I adjusted in the darknet setup (oops) !!!!!!!
+#  Implement fix for the case when an object is assigned two types (causing crashes)
 
 class Converter:
 	
@@ -34,14 +39,7 @@ class Converter:
 	    sys.exit(0)
 			
 	
-	def reader(self):
 
-		while True:
-			f = open("/home/lenny/darknet/output.txt", "r")
-			if (f.mode == 'r'):
-				contents = f.read()
-				self.process(contents)
-				sleep(0.5)
 					
 	def process(self, fd):
 		split1 = fd.split('\n')
@@ -76,6 +74,7 @@ class Converter:
 
                 
 	def calculate(self, pose):
+
 		#Left = x1 - index 1, Top = y1-index 2. Right = x2 - index 3, Bottom = y2 - index4	
 		#Origin is TOP LEFT CORNER
 		#Calculating the center of box.
@@ -87,14 +86,15 @@ class Converter:
                 
                 #Assume 0 yaw is forwards  0 pitch is horizontal
 
-                #Fixed FOV of the camera in the X direction
+                #Fixed FOV of the camera in the X direction - both will depend on zoom in future
 		FOV_Yaw = 63.7
 		
 
 		#Fixed FOV of the camera in the Y direction
 		FOV_Pitch = 39
 
-                #Direction of the boat relative to the drone based on camera orientation, drone orientation and the boat's coordinate on the image.
+                #Direction of the boat relative to the drone based on camera orientation,
+		# drone orientation and the boat's coordinate on the image.
 		ResultYaw = ((pixelX-980)/1960 * GimbalYaw) + self.yaw #From Azimuth
 		ResultPitch = (pixelY-540)/1080 * GimbalPitch + self.pitch 
 
@@ -112,7 +112,16 @@ class Converter:
 		print (newCoord.get("lat2"))
 		print (newCoord.get("lon2"))
 	
+	def NeuralTrack(self, threadname, nq, cap):
+		#net = darknet.load_net("/home/nvidia/Documents/darknet/cfg/yolov3.cfg", "/home/nvidia/Documents/darknet/yolov3.weights", 0)
+		#meta = darknet.load_meta("/home/nvidia/Documents/darknet/cfg/coco.data")
+		while (True):
+			ret,frame = cap.read()
+			#r = neural.runDetection(frame, net, meta)		
+			print (frame)
+			
 	def __init__(self):
+		#temp vals
 		self.altitude = 100.0 #meters
 		self.yaw = 45 #degrees
 		self.lat = 38.992062
@@ -120,17 +129,18 @@ class Converter:
                 self.GimbalPitch = 45
                 self.GimbalYaw = 45
 		self.pitch = 45
+		#self.vehicle = connect(connection_string, wait_ready=True)		
 		signal.signal(signal.SIGINT, self.signal_handler)
-		self.reader()
+		self.capture = cv2.VideoCapture('testCases/vid.avi')
 		
-	
+		self.RegCordQueue = Queue()
+		self.NNCordQueue = Queue()
+		
+		NNThread = Thread(target = self.NeuralTrack, args = ("Thread-1", self.NNCordQueue, self.capture))
+		NNThread.start()
+		#interThread = Thread(target = self.Interpolate, args = ("Thread-2", self.RegCordQueue))
+		
+			
 
-		
-		
-
-
-
-		
-		
 convert = Converter()
-		
+
