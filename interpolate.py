@@ -17,7 +17,7 @@ import time
 
     
 
-cap = cv2.VideoCapture('vid.avi')
+cap = cv2.VideoCapture('testCases/vid.avi')
 
 #center of image param
 center = [360,640]
