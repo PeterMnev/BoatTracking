@@ -113,13 +113,14 @@ class Converter:
 		print (newCoord.get("lon2"))
 	
 	def NeuralTrack(self, threadname, nq, cap):
-		#net = darknet.load_net("/home/nvidia/Documents/darknet/cfg/yolov3.cfg", "/home/nvidia/Documents/darknet/yolov3.weights", 0)
-		#meta = darknet.load_meta("/home/nvidia/Documents/darknet/cfg/coco.data")
+		net = darknet.load_net("/home/nvidia/Documents/darknet/cfg/yolov3.cfg", "/home/nvidia/Documents/darknet/yolov3.weights", 0)
+		meta = darknet.load_meta("/home/nvidia/Documents/darknet/cfg/coco.data")
 		while (True):
 			ret,frame = cap.read()
-			#r = neural.runDetection(frame, net, meta)		
-			print (frame)
-			
+			r = neural.runDetection(frame, net, meta)		
+			print (r)
+			sleep(3)
+
 	def __init__(self):
 		#temp vals
 		self.altitude = 100.0 #meters

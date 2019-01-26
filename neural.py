@@ -7,7 +7,9 @@ import darknet
 
 
 def runDetection(frame, net, meta):
-	
+        
+            
+        cv2.imshow('frame',frame)
 	im, image = darknet.array_to_image(frame)
 	darknet.rgbgr_image(im)
 	r = darknet.detect(net, meta, im)
