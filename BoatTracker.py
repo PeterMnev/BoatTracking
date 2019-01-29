@@ -13,18 +13,19 @@ from time import sleep
 from geographiclib.geodesic import Geodesic
 
 import argparse  
-#should probably rename neural
+#should probably rename this to something more neu(t)ral
 import neural
+import videoGet
 import sys
 sys.path.insert(0, '/home/nvidia/Documents/darknet')
 import darknet
 
 
-#parser = argparse.ArgumentParser(description='Print out vehicle state information. Connects to SITL on local PC by default.')
-#parser.add_argument('--connect', 
-#help="vehicle connection target string. If not specified, SITL automatically started and used.")
-#args = parser.parse_args()
-#connection_string = args.connect
+parser = argparse.ArgumentParser(description='Print out vehicle state information. Connects to SITL on local PC by default.')
+parser.add_argument('--connect', 
+help="vehicle connection target string. If not specified, SITL automatically started and used.")
+args = parser.parse_args()
+connection_string = args.connect
 
 
 
@@ -47,7 +48,7 @@ class Converter:
 			split2 = x.split(', ')
 			if (split2[0] == 'boat'): 
 				self.calculate(split2)
-
+        #Potentially for updater thread.
         def updateState(self):
 
                 #Update position relative to world
@@ -67,7 +68,8 @@ class Converter:
                 
 		#Drone Angle of Yaw zero is north, 90 is EAST
                 self.yaw = vehicle.heading
-		#Drone Angle of Pitch - point up = positive
+		#Drone Angle of Pitch - point up = positive in radians?
+        
 		self.pitch = vehicle.Attitude.pitch
                 
                 
@@ -111,15 +113,19 @@ class Converter:
 
 		print (newCoord.get("lat2"))
 		print (newCoord.get("lon2"))
-	
-	def NeuralTrack(self, threadname, nq, cap):
+
+
+	#For its own thread
+	def neuralTrack(self, threadname, nq, cap):
 		net = darknet.load_net("/home/nvidia/Documents/darknet/cfg/yolov3.cfg", "/home/nvidia/Documents/darknet/yolov3.weights", 0)
 		meta = darknet.load_meta("/home/nvidia/Documents/darknet/cfg/coco.data")
 		while (True):
 			ret,frame = cap.read()
-			r = neural.runDetection(frame, net, meta)		
-			print (r)
-			sleep(3)
+			im, image = darknet.array_to_image(frame)
+                        darknet.rgbgr_image(im)
+                        r = darknet.detect(net, meta, im)              
+                        sleep(12)
+                        print r
 
 	def __init__(self):
 		#temp vals
@@ -130,14 +136,17 @@ class Converter:
                 self.GimbalPitch = 45
                 self.GimbalYaw = 45
 		self.pitch = 45
-		#self.vehicle = connect(connection_string, wait_ready=True)		
+
+		
+		self.vehicle = connect(connection_string, wait_ready=True)		
 		signal.signal(signal.SIGINT, self.signal_handler)
 		self.capture = cv2.VideoCapture('testCases/vid.avi')
 		
 		self.RegCordQueue = Queue()
 		self.NNCordQueue = Queue()
-		
-		NNThread = Thread(target = self.NeuralTrack, args = ("Thread-1", self.NNCordQueue, self.capture))
+		self.inputFeed = videoGet.VideoGet(0)
+                self.inputFeed.start()
+		NNThread = Thread(target = self.neuralTrack, args = ("Thread-1", self.NNCordQueue, self.capture))
 		NNThread.start()
 		#interThread = Thread(target = self.Interpolate, args = ("Thread-2", self.RegCordQueue))
 		

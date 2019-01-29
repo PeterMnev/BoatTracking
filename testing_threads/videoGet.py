@@ -1,12 +1,14 @@
 from threading import Thread
 import cv2
-
+import Queue
 
 class VideoGet:
 
     def __init__(self, src):
         self.stream = cv2.VideoCapture(src)
-        (self.grabbed, self.frame) = self.stream.read()
+        self.frameQ = Queue.Queue()
+        self.grabbed, self.frame = self.stream.read()
+        self.frameQ.put(self.frame)
         self.stopped = False
 
     def start(self):    
@@ -19,6 +21,9 @@ class VideoGet:
                 self.stop()
             else:
                 (self.grabbed, self.frame) = self.stream.read()
+                self.frameQ.put(self.frame)
+                self.frameQ.join()
+
 
     def stop(self):
         self.stopped = True

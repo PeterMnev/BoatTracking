@@ -6,13 +6,18 @@ import videoGet
 
 # https://docs.python.org/2/library/queue.html
 
-
-def work1(threadname, inputF):
+#occasionally pass to ANOTHER thread from this thread, by updating a flag?
+def work1(threadname, inputFeed):
         while(True):
-                frameT = inputF.frame
-                if cv2.waitKey(150) & 0xFF == ord('w'):
+                frameT = inputFeed.frameQ.get()
+
+                inputFeed.frameQ.task_done()
+                if cv2.waitKey(1) & 0xFF == ord('w'):
                         break
-                cv2.imshow('imageTHREAD',frameT)
+                try:
+                        cv2.imshow('imageTHREAD',frameT)
+                except:
+                        break
 
         cv2.destroyAllWindows()
         
@@ -22,20 +27,37 @@ def work1(threadname, inputF):
 
 
 
-inputFeed = videoGet.VideoGet(0)
+inputFeed = videoGet.VideoGet("vid.avi")
 inputFeed.start()
 
 thread1 = threading.Thread(target=work1, args=("Thread-1",inputFeed))
 
 thread1.start()
 
+
+start_time = time.time()
+frame = inputFeed.frameQ.get(True,None)
+inputFeed.frameQ.task_done()
 while (True):
-        frame = inputFeed.frame
-        if cv2.waitKey(15) & 0xFF == ord('q'):
+        cur_time = time.time()
+        if (cur_time - start_time) >= 2:
+                start_time = cur_time
+                try:
+                        frame = inputFeed.frameQ.get(True,1)
+                except:
+                        break
+                inputFeed.frameQ.task_done()
+
+        if cv2.waitKey(1) & 0xFF == ord('q'):
                 inputFeed.stop()
                 break
-        time.sleep(1)
-        cv2.imshow('image',frame)
+
+
+        try:
+                cv2.imshow('image',frame)
+        except:
+                break
+ 
         
         
 cv2.destroyAllWindows()
