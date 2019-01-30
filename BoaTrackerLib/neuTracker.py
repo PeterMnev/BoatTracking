@@ -8,6 +8,7 @@ import darknet
 
 class NeuralTracker:
         def __init__(self, frameQ, outQ):
+                self.nframe = None
                 #Initialize Net
                 self.queue = frameQ
                 self.out = outQ
@@ -21,13 +22,13 @@ class NeuralTracker:
         
         def process(self):
                 while True:                     
-                        nframe = self.queue.get(True)
-         
-        	        im, image = darknet.array_to_image(nframe)
+                        self.nframe = self.queue.get(True)
+                 
+        	        im, image = darknet.array_to_image(self.nframe)
                         darknet.rgbgr_image(im)
                         r = darknet.detect(self.net, self.meta, im) 
                         self.out.put(r)
                         self.out.join()
                 
-                cv2.destroyAllWindows()
+
 

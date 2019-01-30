@@ -3,12 +3,13 @@ import Queue
 import time
 import cv2
 import neuTracker
+import copy
 import numpy as np
 
 class Intermediator:
 	
 	def __init__(self, inputFeed):
-
+                self.pframe = None
 		self.input = inputFeed
 		self.neuralQ = Queue.Queue()
 		self.outQ = Queue.Queue()	
@@ -19,7 +20,7 @@ class Intermediator:
 		self.thread = threading.Thread(target=self.process, args=())
 		self.thread.start()
 		return self	
-        def interpolate(self, frame):
+        def interpolate(self, modframe):
             #center of image param
             center = [360,640]
 
@@ -27,8 +28,8 @@ class Intermediator:
 #Width and height params
             x = 270
             y = 480
-            height, width, channels = frame.shape
-            subFrame = frame[max(0,center[0]-270):min(720,center[0]+270), max(0,center[1]-480):min(1280,center[1]+480)]
+            height, width, channels = modframe.shape
+            subFrame = modframe[max(0,center[0]-270):min(720,center[0]+270), max(0,center[1]-480):min(1280,center[1]+480)]
             #subFrame = frame[max(0,center[0]-270):min(720,center[0]+270), max(0,center[1]-480):min(1280,center[1]+480)]
             kernel = np.ones((5,5),np.uint8)
 
@@ -68,24 +69,21 @@ class Intermediator:
                 
             #cv2.drawContours(subFrame, biggestContour, -1, (0,255,0),3)
             cv2.rectangle(subFrame, (0,0),(960,480),(0,255,255),thickness=4)  
-            return frame
+            return modframe
             
             
 	def process(self):
 		begin_time = time.time()-.5
 		while True:
+		        frame = self.input.frameQ.get()
+		        self.input.frameQ.task_done()
 		        cur_time = time.time()
 			if (cur_time - begin_time >= 3):
 			        begin_time = cur_time
 			        self.neuralQ.put(frame)
-			        #Call a neural processor thread
-			#Collect Frame
-			frame = self.input.frameQ.get()
-		        self.input.frameQ.task_done()
-                        pframe = self.interpolate(frame)
-                        if cv2.waitKey(10) & 0xFF == ord('q'):
-                            break
-                        cv2.imshow('frame',pframe)
+
+                        modframe = copy.copy(frame)
+                        self.pframe = self.interpolate(modframe)
 			#Do processing
 			#(set of opencv commands here)
 		        self.interCord = "None" #temporarily none.
@@ -98,6 +96,4 @@ class Intermediator:
 			except:
 			        continue			
 							
-
-	
-		
+		cv2.destroyAllWindows()

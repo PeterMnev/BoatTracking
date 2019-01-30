@@ -3,11 +3,10 @@ from __future__ import division
 from __future__ import print_function
 import math
 import signal
-import cv2
 import numpy as np
 from threading import Thread
 from Queue import Queue
-
+import cv2
 #from dronekit import connect, VehicleMode
 from time import sleep
 from geographiclib.geodesic import Geodesic
@@ -15,6 +14,7 @@ import intermediator
 import argparse  
 import videoGet
 import sys
+import time
 sys.path.insert(0, '/home/nvidia/Documents/darknet')
 import darknet
 
@@ -133,9 +133,20 @@ class Tracker:
 		self.inter = intermediator.Intermediator(self.inputFeed)
 		self.inter.start()
 		
-		
-			
+        def loop(self):
+                time.sleep(8)
+                while True:
+                        if cv2.waitKey(1) & 0xFF == ord('q'):
+                                inputFeed.stop()
+                                break
+                   
+                        try:
+                                cv2.imshow("frame-inter",self.inter.pframe)
+                                cv2.imshow("frame-neural",self.inter.nTracker.nframe)
+                        except:
+                                continue
+		cv2.destroyAllWindows()
 
 tracker = Tracker()
-
+tracker.loop()
 
