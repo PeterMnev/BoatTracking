@@ -24,8 +24,8 @@ class Intermediator:
             #center of image param
             center = [360,640]
 
-#Ideally these parameters would be dynamically adjusted based on the neural net initial grab, and then based on the bounding box size.
-#Width and height params
+                #Ideally these parameters would be dynamically adjusted based on the neural net initial grab, and then based on the bounding box size.
+                #Width and height params
             x = 270
             y = 480
             height, width, channels = modframe.shape
