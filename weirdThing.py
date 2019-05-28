@@ -10,24 +10,24 @@ start_time = time.time()
 
 #GOAL: Compute next center. Increase bounding box with time.
 
-#Preparation of image
-im = cv2.imread('BoatPic.jpg')
-imgr = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
-imgray = cv2.medianBlur(imgr,15)
-
-#Regular detection
-ret,thresh = cv2.threshold(imgray, 127,255, 0)
-im2, contours, hierarchy = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
 
-cv2.drawContours(im, contours, -1, (0,255,0),3)
-
-print("--- %s seconds ---" % (time.time() - start_time))
-
-cv2.imwrite("BoatSmoothed.jpeg", imgray)
-cv2.imwrite("BoatContoursAlt.jpg",im)
-
-
+###Preparation of image
+##im = cv2.imread('boatProcked.jpeg')
+##imgr = cv2.cvtColor(im,cv2.COLOR_BGR2GRAY)
+##imgray = cv2.medianBlur(imgr,15)
+##
+###Regular detection
+##ret,thresh = cv2.threshold(imgray, 127,255, 0)
+##im2, contours, hier = cv2.findContours(thresh, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+##
+##
+##cv2.drawContours(im, contours, -1, (0,255,0),3)
+##
+##print("--- %s seconds ---" % (time.time() - start_time))
+##
+##cv2.imwrite("BoatSmoothed.jpeg", imgray)
+##cv2.imwrite("BoatContoursAlt.jpg",im)
 
 
 cap = cv2.VideoCapture('vid.avi')
@@ -56,7 +56,7 @@ while(True):
     #Canny detection
     edged = cv2.Canny(greyFrame, lower, upper)
     #ret,edged = cv2.threshold(greyFrame, 200,255, 0)
-    im2, contours, hierarchy = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    contours, hierarchy = cv2.findContours(edged, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
     
 
